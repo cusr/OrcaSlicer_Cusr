@@ -949,6 +949,8 @@ void Layer::make_ironing()
 		double 		speed;
 		double 		angle;
         double 		inset;
+	    bool        force_same_angle;
+	    double      minimal_surface_factor;
 
 		bool operator<(const IroningParams &rhs) const {
 			if (this->extruder < rhs.extruder)
@@ -979,12 +981,20 @@ void Layer::make_ironing()
                 return true;
             if (this->inset > rhs.inset)
                 return false;
+		    if (int(this->force_same_angle) < int(rhs.force_same_angle))
+		        return true;
+		    if (int(this->force_same_angle) > int(rhs.force_same_angle))
+		        return false;
+		    if (this->minimal_surface_factor < rhs.minimal_surface_factor)
+		        return true;
+		    if (this->minimal_surface_factor > rhs.minimal_surface_factor)
+		        return false;
 			return false;
 		}
 
 		bool operator==(const IroningParams &rhs) const {
 			return this->extruder == rhs.extruder && this->just_infill == rhs.just_infill &&
-				   this->line_spacing == rhs.line_spacing && this->height == rhs.height && this->speed == rhs.speed && this->angle == rhs.angle && this->pattern == rhs.pattern && this->inset == rhs.inset;
+				   this->line_spacing == rhs.line_spacing && this->height == rhs.height && this->speed == rhs.speed && this->angle == rhs.angle && this->pattern == rhs.pattern && this->inset == rhs.inset && this->force_same_angle == rhs.force_same_angle && this->minimal_surface_factor == rhs.minimal_surface_factor;
 		}
 
 		LayerRegion *layerm		= nullptr;
@@ -1029,6 +1039,8 @@ void Layer::make_ironing()
 				ironing_params.just_infill 	= false;
 				ironing_params.line_spacing = config.ironing_spacing;
                 ironing_params.inset 		= config.ironing_inset;
+			    ironing_params.force_same_angle = config.ironing_angle_force_same_direction;
+			    ironing_params.minimal_surface_factor = config.ironing_minimal_surface_factor;
 				ironing_params.height 		= default_layer_height * 0.01 * config.ironing_flow;
 				ironing_params.speed 		= config.ironing_speed;
                 ironing_params.angle        = (config.ironing_angle >= 0 ? config.ironing_angle : config.infill_direction) * M_PI / 180.;
@@ -1127,12 +1139,16 @@ void Layer::make_ironing()
         // Create the filler object.
         f->spacing = ironing_params.line_spacing;
         f->angle = float(ironing_params.angle);
+	    f->rotate_angle = !ironing_params.force_same_angle;
         f->link_max_length = (coord_t) scale_(3. * f->spacing);
 		double  extrusion_height = ironing_params.height * f->spacing / nozzle_dmr;
 		float  extrusion_width  = Flow::rounded_rectangle_extrusion_width_from_spacing(float(nozzle_dmr), float(extrusion_height));
 		double flow_mm3_per_mm = nozzle_dmr * extrusion_height;
         Surface surface_fill(stTop, ExPolygon());
         for (ExPolygon &expoly : ironing_areas) {
+            if (ironing_params.minimal_surface_factor > 0 && expoly.area() < Slic3r::sqr(scale_(ironing_params.minimal_surface_factor))) {
+                continue;
+            }
 			surface_fill.expolygon = std::move(expoly);
 			Polylines polylines;
 			try {

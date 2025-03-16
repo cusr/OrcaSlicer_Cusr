@@ -3080,6 +3080,22 @@ void PrintConfigDef::init_fff_params()
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(20));
 
+    def           = this->add("ironing_angle_force_same_direction", coBool);
+    def->label    = L("Ironing force same direction");
+    def->category = L("Quality");
+    def->tooltip  = L("Force all top layers using the same direction.");
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionBool(false));
+
+    def = this->add("ironing_minimal_surface_factor", coFloat);
+    def->label = L("Ironing minimal surface factor");
+    def->category = L("Quality");
+    def->tooltip = L("For a single layer, disable ironing if the ironing area is smaller than the square of this value. A negative number disables this function.");
+    def->sidetext = L("mm");
+    def->min = -1;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(-1.0));
+
     def           = this->add("ironing_angle", coFloat);
     def->label    = L("Ironing angle");
     def->category = L("Quality");
