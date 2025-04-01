@@ -285,10 +285,11 @@ using VariableWidthLines = std::vector<ExtrusionLine>; //<! The ExtrusionLines g
 } // namespace Slic3r::Arachne
 
 namespace Slic3r {
-
-void extrusion_paths_append(ExtrusionPaths &dst, const ClipperLib_Z::Paths &extrusion_paths, const ExtrusionRole role, const Flow &flow);
-void extrusion_paths_append(ExtrusionPaths &dst, const Arachne::ExtrusionLine &extrusion, const ExtrusionRole role, const Flow &flow);
-
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+void extrusion_paths_append(ExtrusionPaths &dst, const ClipperLib_Z::Paths &extrusion_paths, const ExtrusionRole role, const Flow &flow, int overhang = 0);
+void extrusion_paths_append(ExtrusionPaths &dst, const Arachne::ExtrusionLine &extrusion, const ExtrusionRole role, const Flow &flow, int overhang = 0);
+void extrusion_path_append(ExtrusionPaths &dst, const ThickPolyline &thick_polyline, const ExtrusionRole role, const Flow &flow, int overhang = 0);
+// END MODS SU
 } // namespace Slic3r
 
 #endif // UTILS_EXTRUSION_LINE_H

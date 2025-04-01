@@ -3768,6 +3768,21 @@ void PrintConfigDef::init_fff_params()
                      "For 100%% overhang, bridge speed is used.");
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionBool(true));
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+    def = this->add("smooth_speed_discontinuity_area", coBool);
+    def->label = L("Smooth speed discontinuity area");
+    def->category = L("Quality");
+    def->tooltip  = L("Add the speed transition between discontinuity area.");
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionBool(true));
+
+    def           = this->add("smooth_coefficient", coFloat);
+    def->label    = L("Smooth coefficient");
+    def->category = L("Quality");
+    def->tooltip  = L("The smaller the number, the longer the speed transition path.");
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(80));
+// END MODS SU
 
     def = this->add("wall_filament", coInt);
     def->gui_type = ConfigOptionDef::GUIType::i_enum_open;
@@ -6530,7 +6545,9 @@ void PrintConfigDef::handle_legacy(t_config_option_key &opt_key, std::string &va
         "retraction_distance_when_cut",
         "extruder_type",
         "internal_bridge_support_thickness","extruder_clearance_max_radius", "top_area_threshold", "reduce_wall_solid_infill","filament_load_time","filament_unload_time",
-        "smooth_coefficient", "overhang_totally_speed", "silent_mode"
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+        "overhang_totally_speed", "silent_mode"
+// END MODS SU
     };
 
     if (ignore.find(opt_key) != ignore.end()) {

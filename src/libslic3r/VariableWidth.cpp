@@ -2,7 +2,9 @@
 
 namespace Slic3r {
 
-ExtrusionMultiPath thick_polyline_to_multi_path(const ThickPolyline& thick_polyline, ExtrusionRole role, const Flow& flow, const float tolerance, const float merge_tolerance)
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+ExtrusionMultiPath thick_polyline_to_multi_path(const ThickPolyline& thick_polyline, ExtrusionRole role, const Flow& flow, const float tolerance, const float merge_tolerance, int overhang)
+// END MODS SU
 {
     ExtrusionMultiPath multi_path;
     ExtrusionPath      path(role);
@@ -90,8 +92,12 @@ ExtrusionMultiPath thick_polyline_to_multi_path(const ThickPolyline& thick_polyl
             }
         }
     }
-    if (path.polyline.is_valid())
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+    if (path.polyline.is_valid()) {
+        path.overhang_degree = overhang;
         multi_path.paths.emplace_back(std::move(path));
+    }
+// END MODS SU
     return multi_path;
 }
 

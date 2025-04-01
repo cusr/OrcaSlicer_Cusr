@@ -965,6 +965,10 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloat, ironing_minimal_surface_factor))
     // Detect bridging perimeters
     ((ConfigOptionBool, detect_overhang_wall))
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+    ((ConfigOptionBool, smooth_speed_discontinuity_area))
+    ((ConfigOptionFloat, smooth_coefficient))
+// END MODS SU
     ((ConfigOptionInt, wall_filament))
     ((ConfigOptionFloatOrPercent, inner_wall_line_width))
     ((ConfigOptionFloat, inner_wall_speed))

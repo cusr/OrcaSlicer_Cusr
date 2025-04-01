@@ -366,7 +366,11 @@ private:
     std::string     extrude_loop(ExtrusionLoop loop, std::string description, double speed = -1., const ExtrusionEntitiesPtr& region_perimeters = ExtrusionEntitiesPtr());
     std::string     extrude_multi_path(ExtrusionMultiPath multipath, std::string description = "", double speed = -1.);
     std::string     extrude_path(ExtrusionPath path, std::string description = "", double speed = -1.);
-    
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+    //smooth speed function
+    void            smooth_speed_discontinuity_area(ExtrusionPaths &paths);
+    ExtrusionPaths  merge_same_speed_paths(const ExtrusionPaths &paths);
+// END MODS SU
     // Orca: Adaptive PA variables
     // Used for adaptive PA when extruding paths with multiple, varying flow segments.
     // This contains the sum of the mm3_per_mm values weighted by the length of each path segment.
@@ -601,6 +605,13 @@ private:
     int get_bed_temperature(const int extruder_id, const bool is_first_layer, const BedType bed_type) const;
 
     std::string _extrude(const ExtrusionPath &path, std::string description = "", double speed = -1);
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+    ExtrusionPaths set_speed_transition(ExtrusionPaths &paths);
+    ExtrusionPaths split_and_mapping_speed(double &other_path_v, double &final_v, ExtrusionPath &this_path, double max_smooth_length, bool split_from_left = true);
+    double get_path_speed(const ExtrusionPath &path);
+    double mapping_speed(double dist);
+    double get_speed_coor_x(double speed);
+// END MODS SU
     double get_overhang_degree_corr_speed(float speed, double path_degree);
     void print_machine_envelope(GCodeOutputStream &file, Print &print);
     void _print_first_layer_bed_temperature(GCodeOutputStream &file, Print &print, const std::string &gcode, unsigned int first_printing_extruder_id, bool wait);

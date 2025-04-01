@@ -2093,6 +2093,10 @@ void TabPrint::build()
         optgroup->append_single_option_line("make_overhang_printable");
         optgroup->append_single_option_line("make_overhang_printable_angle");
         optgroup->append_single_option_line("make_overhang_printable_hole_size");
+// BEGIN MODS SU: cherrypick BBS(0efa2db823)
+        optgroup->append_single_option_line("smooth_speed_discontinuity_area");
+        optgroup->append_single_option_line("smooth_coefficient");
+// END MODS SU
         optgroup->append_single_option_line("extra_perimeters_on_overhangs");
         optgroup->append_single_option_line("overhang_reverse");
         optgroup->append_single_option_line("overhang_reverse_internal_only");
@@ -2157,7 +2161,9 @@ void TabPrint::build()
         optgroup = page->new_optgroup(L("Overhang speed"), L"param_overhang_speed", 15);
         optgroup->append_single_option_line("enable_overhang_speed", "slow-down-for-overhang");
         // Orca: DEPRECATED
-        // optgroup->append_single_option_line("overhang_speed_classic", "slow-down-for-overhang");
+// BEGIN MODS SU: cherrypick BBS(0efa2db823), need to enable this to use the smooth speed
+        optgroup->append_single_option_line("overhang_speed_classic");
+// END MODS SU
         optgroup->append_single_option_line("slowdown_for_curled_perimeters");
         Line line = { L("Overhang speed"), L("This is the speed for various overhang degrees. Overhang degrees are expressed as a percentage of line width. 0 speed means no slowing down for the overhang degree range and wall speed is used") };
         line.label_path = "slow-down-for-overhang";
