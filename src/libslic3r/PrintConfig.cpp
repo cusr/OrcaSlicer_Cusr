@@ -3272,6 +3272,7 @@ void PrintConfigDef::init_fff_params()
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(20));
 
+// BEGIN MODS SU: more ironing control
     def           = this->add("ironing_angle_force_same_direction", coBool);
     def->label    = L("Ironing force same direction");
     def->category = L("Quality");
@@ -3287,6 +3288,7 @@ void PrintConfigDef::init_fff_params()
     def->min = -1;
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionFloat(-1.0));
+// END MODS SU
 
     def           = this->add("ironing_angle", coFloat);
     def->label    = L("Ironing angle");

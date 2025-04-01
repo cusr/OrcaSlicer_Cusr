@@ -961,8 +961,10 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloat, ironing_direction))
     ((ConfigOptionFloat, ironing_speed))
     ((ConfigOptionFloat, ironing_angle))
+// BEGIN MODS SU: more ironing control
     ((ConfigOptionBool, ironing_angle_force_same_direction))
     ((ConfigOptionFloat, ironing_minimal_surface_factor))
+// END MODS SU
     // Detect bridging perimeters
     ((ConfigOptionBool, detect_overhang_wall))
 // BEGIN MODS SU: cherrypick BBS(0efa2db823)
