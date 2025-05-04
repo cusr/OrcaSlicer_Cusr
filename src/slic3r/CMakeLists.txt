@@ -572,6 +572,7 @@ set(SLIC3R_GUI_SOURCES
     Utils/ElegooLink.hpp
     Utils/ElegooLink.cpp
     Utils/WebSocketClient.hpp
+    Utils/bambu_networking.hpp
 )
 
 if (WIN32)

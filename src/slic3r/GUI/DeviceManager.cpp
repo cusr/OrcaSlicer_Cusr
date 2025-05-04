@@ -810,6 +810,9 @@ int MachineObject::ams_filament_mapping(std::vector<FilamentInfo> filaments, std
     // tray_index : tray_color
     std::map<int, FilamentInfo> tray_filaments;
     for (auto ams = amsList.begin(); ams != amsList.end(); ams++) {
+
+        std::string ams_id = ams->second->id;
+
         for (auto tray = ams->second->trayList.begin(); tray != ams->second->trayList.end(); tray++) {
             int ams_id = atoi(ams->first.c_str());
             int tray_id = atoi(tray->first.c_str());
@@ -828,6 +831,11 @@ int MachineObject::ams_filament_mapping(std::vector<FilamentInfo> filaments, std
                 info.filament_id = tray->second->setting_id;
                 info.ctype = tray->second->ctype;
                 info.colors = tray->second->cols;
+
+                /*for new ams mapping*/
+                info.ams_id = ams->first.c_str();
+                info.slot_id = tray->first.c_str();
+
                 tray_filaments.emplace(std::make_pair(tray_index, info));
             }
         }
@@ -835,27 +843,28 @@ int MachineObject::ams_filament_mapping(std::vector<FilamentInfo> filaments, std
 
     // tray info list
     std::vector<FilamentInfo> tray_info_list;
-    for (auto it = amsList.begin(); it != amsList.end(); it++) {
-        for (int i = 0; i < 4; i++) {
+    int flament_index_id = 0;
+    for (auto ams = amsList.begin(); ams != amsList.end(); ams++) {
+        for (auto tray = ams->second->trayList.begin(); tray != ams->second->trayList.end(); tray++) {
+
             FilamentInfo info;
-            auto tray_it = it->second->trayList.find(std::to_string(i));
-            if (tray_it != it->second->trayList.end()) {
-                info.id = atoi(tray_it->first.c_str()) + atoi(it->first.c_str()) * 4;
-                info.tray_id = atoi(tray_it->first.c_str()) + atoi(it->first.c_str()) * 4;
-                info.color = tray_it->second->color;
-                info.type = tray_it->second->get_filament_type();
-                info.ctype = tray_it->second->ctype;
-                info.colors = tray_it->second->cols;
-            }
-            else {
-                info.id = -1;
-                info.tray_id = -1;
-            }
+            info.id = flament_index_id;
+            info.tray_id = flament_index_id;
+            info.color = tray->second->color;
+            info.type = tray->second->get_filament_type();
+            info.ctype = tray->second->ctype;
+            info.colors = tray->second->cols;
+
+
+            /*for new ams mapping*/
+            info.ams_id = ams->second->id;
+            info.slot_id = tray->second->id;
+
             tray_info_list.push_back(info);
+            flament_index_id++;
         }
     }
 
-    
     // is_support_ams_mapping
     if (!is_support_ams_mapping()) {
         BOOST_LOG_TRIVIAL(info) << "ams_mapping: do not support, use order mapping";
@@ -987,6 +996,11 @@ int MachineObject::ams_filament_mapping(std::vector<FilamentInfo> filaments, std
                 result[picked_src_idx].filament_id = tray->second.filament_id;
                 result[picked_src_idx].ctype = tray->second.ctype;
                 result[picked_src_idx].colors = tray->second.colors;
+
+
+                /*for new ams mapping*/
+                result[picked_src_idx].ams_id = tray->second.ams_id;
+                result[picked_src_idx].slot_id = tray->second.slot_id;
             }
             else {
                 FilamentInfo info;
@@ -1028,6 +1042,10 @@ int MachineObject::ams_filament_mapping(std::vector<FilamentInfo> filaments, std
                     result[i].type = tray_info_list[i].type;
                     result[i].ctype = tray_info_list[i].ctype;
                     result[i].colors = tray_info_list[i].colors;
+
+                    /*for new ams mapping*/
+                    result[i].ams_id = tray_info_list[i].ams_id;
+                    result[i].slot_id = tray_info_list[i].slot_id;
                 }
             }
         }
@@ -2623,29 +2641,38 @@ bool MachineObject::is_camera_busy_off()
     return false;
 }
 
-int MachineObject::publish_json(std::string json_str, int qos)
+int MachineObject::publish_json(std::string json_str, int qos, int flag)
 {
+    int rtn = 0;
     if (is_lan_mode_printer()) {
-        return local_publish_json(json_str, qos);
+        rtn = local_publish_json(json_str, qos, flag);
     } else {
-        return cloud_publish_json(json_str, qos);
+        rtn = cloud_publish_json(json_str, qos, flag);
     }
+
+    if (rtn == 0) {
+        BOOST_LOG_TRIVIAL(info) << "publish_json: " << json_str << " code: " << rtn;
+    } else {
+        BOOST_LOG_TRIVIAL(error) << "publish_json: " << json_str << " code: " << rtn;
+    }
+
+    return rtn;
 }
 
-int MachineObject::cloud_publish_json(std::string json_str, int qos)
+int MachineObject::cloud_publish_json(std::string json_str, int qos, int flag)
 {
     int result = -1;
     if (m_agent)
-        result = m_agent->send_message(dev_id, json_str, qos);
+        result = m_agent->send_message(dev_id, json_str, qos, flag);
 
     return result;
 }
 
-int MachineObject::local_publish_json(std::string json_str, int qos)
+int MachineObject::local_publish_json(std::string json_str, int qos, int flag)
 {
     int result = -1;
     if (m_agent) {
-        result = m_agent->send_message_to_printer(dev_id, json_str, qos);
+        result = m_agent->send_message_to_printer(dev_id, json_str, qos, flag);
     }
     return result;
 }
@@ -3915,11 +3942,24 @@ int MachineObject::parse_json(std::string payload, bool key_field_only)
                                 for (auto it = j_ams.begin(); it != j_ams.end(); it++) {
                                     if (!it->contains("id")) continue;
                                     std::string ams_id = (*it)["id"].get<std::string>();
+
+                                    int nozzle_id = 0; // Default nozzle id 
+                                    int type_id = 1;   // 0:dummy 1:ams 2:ams-lite 3:n3f 4:n3s
+
+                                    if (it->contains("nozzle")) {
+                                        nozzle_id = (*it)["nozzle"].get<int>();
+                                    }
+
+                                    if (it->contains("type")) {
+                                        type_id = (*it)["type"].get<int>();
+                                    }
+                                   
                                     ams_id_set.erase(ams_id);
                                     Ams* curr_ams = nullptr;
                                     auto ams_it = amsList.find(ams_id);
                                     if (ams_it == amsList.end()) {
-                                        Ams* new_ams = new Ams(ams_id);
+                                        Ams* new_ams = new Ams(ams_id, nozzle_id, type_id);
+
                                         try {
                                             if (!ams_id.empty()) {
                                                 int ams_id_int = atoi(ams_id.c_str());
@@ -4746,7 +4786,47 @@ int MachineObject::parse_json(std::string payload, bool key_field_only)
                     }
                 }
             }
+
+            /*parse np*/
+            try
+            {
+                if (jj.contains("cfg") && jj.contains("fun") && jj.contains("aux") && jj.contains("stat")) {
+                    is_enable_np = true;
+                }
+                else {
+                    is_enable_np = false;
+                }
+
+                if (jj.contains("device")) {
+                    json const & device = jj["device"];
+                    
+                    if (device.contains("nozzle")) {
+                        json const & nozzle = device["nozzle"];
+
+                        m_np_nozzle_data = NozzleData();
+                        m_np_nozzle_data.info = nozzle["info"].get<int>();
+
+
+                        for (const auto& noz : nozzle.items()) {
+                            std::string nozzle_id = noz.key();
+                            json const & ndata = noz.value();
+
+                            Nozzle n;
+                            if (ndata.contains("info")) {n.info = ndata["info"].get<int>(); }
+                            if (ndata.contains("snow")) {n.info = ndata["snow"].get<int>(); }
+                            if (ndata.contains("spre")) {n.info = ndata["spre"].get<int>(); }
+                            if (ndata.contains("star")) {n.info = ndata["star"].get<int>(); }
+                            if (ndata.contains("stat")) {n.info = ndata["stat"].get<int>(); }
+                            if (ndata.contains("temp")) {n.info = ndata["temp"].get<int>(); }
+                            m_np_nozzle_data.nozzle[nozzle_id] = n;
+                        }
+                    }
+                }
+            }
+            catch (...)
+            {}
         }
+
         if (!key_field_only) {
             try {
                 if (j.contains("camera")) {
